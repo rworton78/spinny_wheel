@@ -2,12 +2,25 @@ import React, { useState, useEffect, useRef } from 'react';
 import { gsap } from 'gsap';
 import './SpinningWheel.css';
 
-interface SpinningWheelProps {}
+export interface BrandSegment {
+  id: string;
+  name: string;
+  color: string;
+  logo?: string; // URL or emoji
+  isDisplayed: boolean;
+  isNoWin?: boolean;
+}
 
-const SpinningWheel: React.FC<SpinningWheelProps> = () => {
-  const [segmentCount, setSegmentCount] = useState<number>(6);
-  const [winningSegment, setWinningSegment] = useState<string>('random');
-  const [spinDuration, setSpinDuration] = useState<number>(5.5);
+export interface SpinningWheelProps {
+  segments: BrandSegment[];
+  targetSegmentId?: string; // 'random' | segmentId | undefined
+}
+
+const SPIN_DURATION = 5.5;
+
+const SpinningWheel: React.FC<SpinningWheelProps> = ({ segments, targetSegmentId = 'random' }) => {
+  const displayedSegments = segments.filter(segment => segment.isDisplayed);
+  const segmentCount = displayedSegments.length;
   const [isSpinning, setIsSpinning] = useState<boolean>(false);
   const [status, setStatus] = useState<string>('Ready to spin!');
   const [currentRotation, setCurrentRotation] = useState<number>(0);
@@ -15,33 +28,7 @@ const SpinningWheel: React.FC<SpinningWheelProps> = () => {
   const wheelRef = useRef<HTMLDivElement>(null);
   const spinAudioRef = useRef<HTMLAudioElement>(null);
 
-  const colors: string[] = [
-    '#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4',
-    '#feca57', '#ff9ff3', '#a8e6cf', '#ff8b94',
-    '#ffaaa5', '#ff677d', '#d4a4eb', '#a8dadc'
-  ];
 
-  const emojis: string[] = [
-    '🎯', '🍀', '⭐', '🎉', '🔥', '💎', 
-    '🚀', '🎊', '🌟', '🎈', '🎁', '🏆'
-  ];
-
-  const updateSegmentCount = (newCount: string): void => {
-    const count = parseInt(newCount);
-    if (count >= 2 && count <= 12) {
-      setSegmentCount(count);
-      setStatus(`Updated to ${count} segments`);
-      
-      // Reset winning segment if it's higher than new count
-      if (winningSegment !== 'random' && parseInt(winningSegment) > count) {
-        setWinningSegment('random');
-      }
-      
-      setTimeout(() => {
-        if (!isSpinning) setStatus('Ready to spin!');
-      }, 2000);
-    }
-  };
 
   const drawWheel = (): void => {
     if (!wheelRef.current) return;
@@ -72,7 +59,7 @@ const SpinningWheel: React.FC<SpinningWheelProps> = () => {
 
       const path = document.createElementNS(svgNS, 'path');
       path.setAttribute('d', pathData);
-      path.setAttribute('fill', colors[i % colors.length]);
+      path.setAttribute('fill', displayedSegments[i].color);
       path.setAttribute('stroke', '#fff');
       svg.appendChild(path);
 
@@ -86,47 +73,46 @@ const SpinningWheel: React.FC<SpinningWheelProps> = () => {
       const emojiTx = cx + 130 * Math.cos((midAngle - 90) * Math.PI / 180);
       const emojiTy = cy + 130 * Math.sin((midAngle - 90) * Math.PI / 180);
 
-      // Add number text (at top)
-      const numberText = document.createElementNS(svgNS, 'text');
-      numberText.setAttribute('x', numberTx.toString());
-      numberText.setAttribute('y', numberTy.toString());
-      numberText.setAttribute('text-anchor', 'middle');
-      numberText.setAttribute('dominant-baseline', 'middle');
-      numberText.setAttribute('fill', 'white');
-      numberText.setAttribute('font-size', '18');
-      numberText.setAttribute('font-weight', 'bold');
-      numberText.setAttribute('transform', `rotate(${midAngle}, ${numberTx}, ${numberTy})`);
-      numberText.textContent = (i + 1).toString();
-      svg.appendChild(numberText);
+      const segment = displayedSegments[i];
+      
+      // Add brand name text (at top)
+      const nameText = document.createElementNS(svgNS, 'text');
+      nameText.setAttribute('x', numberTx.toString());
+      nameText.setAttribute('y', numberTy.toString());
+      nameText.setAttribute('text-anchor', 'middle');
+      nameText.setAttribute('dominant-baseline', 'middle');
+      nameText.setAttribute('fill', 'white');
+      nameText.setAttribute('font-size', '14');
+      nameText.setAttribute('font-weight', 'bold');
+      nameText.setAttribute('transform', `rotate(${midAngle}, ${numberTx}, ${numberTy})`);
+      nameText.textContent = segment.name;
+      svg.appendChild(nameText);
 
-      // Add emoji text (larger, at bottom)
-      const emojiText = document.createElementNS(svgNS, 'text');
-      emojiText.setAttribute('x', emojiTx.toString());
-      emojiText.setAttribute('y', emojiTy.toString());
-      emojiText.setAttribute('text-anchor', 'middle');
-      emojiText.setAttribute('dominant-baseline', 'middle');
-      emojiText.setAttribute('font-size', '32');
-      emojiText.setAttribute('transform', `rotate(${midAngle}, ${emojiTx}, ${emojiTy})`);
-      emojiText.textContent = emojis[i % emojis.length];
-      svg.appendChild(emojiText);
+      // Add logo/emoji text (larger, at bottom)
+      if (segment.logo) {
+        const logoText = document.createElementNS(svgNS, 'text');
+        logoText.setAttribute('x', emojiTx.toString());
+        logoText.setAttribute('y', emojiTy.toString());
+        logoText.setAttribute('text-anchor', 'middle');
+        logoText.setAttribute('dominant-baseline', 'middle');
+        logoText.setAttribute('font-size', '32');
+        logoText.setAttribute('transform', `rotate(${midAngle}, ${emojiTx}, ${emojiTy})`);
+        logoText.textContent = segment.logo;
+        svg.appendChild(logoText);
+      }
     }
 
     wheelRef.current.appendChild(svg);
   };
 
-  const calculateTargetAngle = (segment: string): number => {
+  const calculateTargetAngle = (segmentId: string): number => {
     const anglePerSegment = 360 / segmentCount;
-    const index = parseInt(segment) - 1;
+    const index = displayedSegments.findIndex(seg => seg.id === segmentId);
+    if (index === -1) return 0;
     const centerAngle = index * anglePerSegment + anglePerSegment / 2;
     return ((-centerAngle % 360) + 360) % 360;
   };
 
-  const detectSegment = (finalRotation: number): number => {
-    const normalized = ((finalRotation % 360) + 360) % 360;
-    const adjusted = (normalized + 90) % 360;
-    const segment = Math.floor(adjusted / (360 / segmentCount));
-    return segment + 1;
-  };
 
   const playSpinSound = (): void => {
     if (spinAudioRef.current) {
@@ -145,19 +131,21 @@ const SpinningWheel: React.FC<SpinningWheelProps> = () => {
     if (isSpinning) return;
     setIsSpinning(true);
 
-    const selected = winningSegment;
-    const duration = parseFloat(spinDuration.toString());
+    const selected = targetSegmentId;
+    const duration = SPIN_DURATION;
     const spins = 5;
-    let targetSegment: number;
+    let targetSegment: BrandSegment;
     let targetAngle: number;
 
     if (selected === 'random') {
-      targetSegment = Math.floor(Math.random() * segmentCount) + 1;
+      const randomIndex = Math.floor(Math.random() * displayedSegments.length);
+      targetSegment = displayedSegments[randomIndex];
     } else {
-      targetSegment = parseInt(selected);
+      const foundSegment = displayedSegments.find(seg => seg.id === selected);
+      targetSegment = foundSegment || displayedSegments[0];
     }
 
-    targetAngle = calculateTargetAngle(targetSegment.toString());
+    targetAngle = calculateTargetAngle(targetSegment.id);
     
     // Add random variation between 5-10 degrees for slight variation
     const randomVariation = 5 + Math.random() * 5; // 5-10 degrees
@@ -180,24 +168,18 @@ const SpinningWheel: React.FC<SpinningWheelProps> = () => {
       onComplete: () => {
         setIsSpinning(false);
         setCurrentRotation(finalRotation);
-        setStatus(`🎯 Landed on Segment ${targetSegment}!`);
+        const resultMessage = targetSegment.isNoWin 
+          ? `❌ No Win!` 
+          : `🎯 Landed on ${targetSegment.name}!`;
+        setStatus(resultMessage);
       }
     });
   };
 
   useEffect(() => {
     drawWheel();
-  }, [segmentCount]);
+  }, [displayedSegments]);
 
-  const generateWinningOptions = (): React.ReactElement[] => {
-    const options: React.ReactElement[] = [<option key="random" value="random">Random</option>];
-    for (let i = 1; i <= segmentCount; i++) {
-      options.push(
-        <option key={i} value={i}>{i}</option>
-      );
-    }
-    return options;
-  };
 
   return (
     <div className="spinning-wheel-container">
@@ -207,45 +189,7 @@ const SpinningWheel: React.FC<SpinningWheelProps> = () => {
       </audio>
 
       <div className="container">
-        <h1>🎯 Guaranteed Spinning Wheel</h1>
         
-        <div className="controls">
-          <div className="control-group">
-            <label htmlFor="segmentCount">Segments:</label>
-            <input 
-              type="number" 
-              id="segmentCount" 
-              min="2" 
-              max="12" 
-              value={segmentCount}
-              onChange={(e) => updateSegmentCount(e.target.value)}
-            />
-          </div>
-          
-          <div className="control-group">
-            <label htmlFor="winningSegment">Winning Segment:</label>
-            <select 
-              id="winningSegment"
-              value={winningSegment}
-              onChange={(e) => setWinningSegment(e.target.value)}
-            >
-              {generateWinningOptions()}
-            </select>
-          </div>
-          
-          <div className="control-group">
-            <label htmlFor="spinDuration">Spin Duration (s):</label>
-            <input 
-              type="number" 
-              id="spinDuration" 
-              min="1" 
-              max="10" 
-              value={spinDuration}
-              step="0.5"
-              onChange={(e) => setSpinDuration(parseFloat(e.target.value))}
-            />
-          </div>
-        </div>
 
         <div className="wheel-container">
           <div className="wheel" ref={wheelRef}></div>
