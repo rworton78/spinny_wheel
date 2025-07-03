@@ -9,6 +9,8 @@ export interface BrandSegment {
   logo?: string; // URL or emoji
   isDisplayed: boolean;
   isNoWin?: boolean;
+  winningMessage?: string; // Custom message when this segment wins
+  claimURL?: string; // URL to claim the prize
 }
 
 export interface SpinningWheelProps {
@@ -163,9 +165,17 @@ const SpinningWheel: React.FC<SpinningWheelProps> = ({ segments, targetSegmentId
       onComplete: () => {
         setIsSpinning(false);
         setCurrentRotation(finalRotation);
-        const resultMessage = targetSegment.isNoWin 
-          ? `❌ No Win!` 
-          : `🎯 Landed on ${targetSegment.name}!`;
+        let resultMessage: string;
+        if (targetSegment.isNoWin) {
+          resultMessage = targetSegment.winningMessage || `❌ No Win!`;
+        } else {
+          const message = targetSegment.winningMessage || `🎯 Landed on ${targetSegment.name}!`;
+          if (targetSegment.claimURL) {
+            resultMessage = `<a href="${targetSegment.claimURL}" target="_blank" rel="noopener noreferrer" style="color: ${targetSegment.color}; text-decoration: underline;">${message}</a>`;
+          } else {
+            resultMessage = message;
+          }
+        }
         setStatus(resultMessage);
       }
     });
@@ -199,7 +209,7 @@ const SpinningWheel: React.FC<SpinningWheelProps> = ({ segments, targetSegmentId
           {isSpinning ? '🌟 SPINNING...' : '🎲 SPIN THE WHEEL'}
         </button>
         
-        <div className="status">{status}</div>
+        <div className="status" dangerouslySetInnerHTML={{ __html: status }}></div>
       </div>
     </div>
   );

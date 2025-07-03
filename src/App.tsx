@@ -5,12 +5,12 @@ import './App.css';
 const App: React.FC = () => {
   const [targetSegment, setTargetSegment] = React.useState<string>('1');
   const [segments, setSegments] = React.useState<BrandSegment[]>([
-    { id: '1', name: 'Google', color: '#4285f4', logo: '🔍', isDisplayed: true },
-    { id: '2', name: 'Adidas', color: '#000000', logo: '👟', isDisplayed: true },
-    { id: '3', name: 'Greggs', color: '#ff6b35', logo: '🥖', isDisplayed: true },
-    { id: '4', name: 'Apple', color: '#007aff', logo: '🍎', isDisplayed: true },
-    { id: '5', name: 'Nike', color: '#ff6600', logo: '✅', isDisplayed: true },
-    { id: '6', name: 'No Win', color: '#666666', logo: '❌', isDisplayed: true, isNoWin: true }
+    { id: '1', name: 'Google', color: '#4285f4', logo: '🔍', isDisplayed: true, winningMessage: 'You won a Google gift card!', claimURL: 'https://www.google.com' },
+    { id: '2', name: 'Adidas', color: '#000000', logo: '👟', isDisplayed: true, winningMessage: 'You won Adidas sneakers!', claimURL: 'https://www.adidas.com' },
+    { id: '3', name: 'Greggs', color: '#ff6b35', logo: '🥖', isDisplayed: true, winningMessage: 'You won a free Greggs sandwich!', claimURL: 'https://www.greggs.co.uk' },
+    { id: '4', name: 'Apple', color: '#007aff', logo: '🍎', isDisplayed: true, winningMessage: 'You won an Apple product!', claimURL: 'https://www.apple.com' },
+    { id: '5', name: 'Nike', color: '#ff6600', logo: '✅', isDisplayed: true, winningMessage: 'You won Nike gear!', claimURL: 'https://www.nike.com' },
+    { id: '6', name: 'No Win', color: '#666666', logo: '❌', isDisplayed: true, isNoWin: true, winningMessage: 'Better luck next time!' }
   ]);
 
   const displayedSegments = segments.filter(seg => seg.isDisplayed);
