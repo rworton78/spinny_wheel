@@ -3,7 +3,7 @@ import SpinningWheel, { BrandSegment } from './SpinningWheel';
 import './App.css';
 
 const App: React.FC = () => {
-  const [targetSegment, setTargetSegment] = React.useState<string>('random');
+  const [targetSegment, setTargetSegment] = React.useState<string>('1');
   const [segments, setSegments] = React.useState<BrandSegment[]>([
     { id: '1', name: 'Google', color: '#4285f4', logo: '🔍', isDisplayed: true },
     { id: '2', name: 'Adidas', color: '#000000', logo: '👟', isDisplayed: true },
@@ -36,7 +36,6 @@ const App: React.FC = () => {
             onChange={(e) => setTargetSegment(e.target.value)}
             style={{ padding: '5px', fontSize: '16px' }}
           >
-            <option value="random">Random</option>
             {displayedSegments.map(segment => (
               <option key={segment.id} value={segment.id}>
                 {segment.name}

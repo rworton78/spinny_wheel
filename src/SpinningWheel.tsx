@@ -13,12 +13,12 @@ export interface BrandSegment {
 
 export interface SpinningWheelProps {
   segments: BrandSegment[];
-  targetSegmentId?: string; // 'random' | segmentId | undefined
+  targetSegmentId: string; // segmentId - must be a valid segment ID
 }
 
 const SPIN_DURATION = 5.5;
 
-const SpinningWheel: React.FC<SpinningWheelProps> = ({ segments, targetSegmentId = 'random' }) => {
+const SpinningWheel: React.FC<SpinningWheelProps> = ({ segments, targetSegmentId }) => {
   const displayedSegments = segments.filter(segment => segment.isDisplayed);
   const segmentCount = displayedSegments.length;
   const [isSpinning, setIsSpinning] = useState<boolean>(false);
@@ -137,13 +137,8 @@ const SpinningWheel: React.FC<SpinningWheelProps> = ({ segments, targetSegmentId
     let targetSegment: BrandSegment;
     let targetAngle: number;
 
-    if (selected === 'random') {
-      const randomIndex = Math.floor(Math.random() * displayedSegments.length);
-      targetSegment = displayedSegments[randomIndex];
-    } else {
-      const foundSegment = displayedSegments.find(seg => seg.id === selected);
-      targetSegment = foundSegment || displayedSegments[0];
-    }
+    const foundSegment = displayedSegments.find(seg => seg.id === selected);
+    targetSegment = foundSegment || displayedSegments[0];
 
     targetAngle = calculateTargetAngle(targetSegment.id);
     
